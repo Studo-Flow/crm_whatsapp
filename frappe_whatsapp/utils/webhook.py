@@ -441,7 +441,9 @@ def _infobip_message_text(message_type: str, message: dict) -> str:
 	if message_type in ("BUTTON", "INTERACTIVE_BUTTON_REPLY", "INTERACTIVE_LIST_REPLY"):
 		return message.get("id") or message.get("title") or message.get("text") or ""
 	if message_type in ("IMAGE", "DOCUMENT", "AUDIO", "VIDEO", "STICKER"):
-		return message.get("caption") or message.get("url") or ""
+		# Only a real caption is text; the media URL is downloaded into `attach`
+		# and would otherwise show up as a link under every captionless file.
+		return message.get("caption") or ""
 	if message_type == "REACTION":
 		# An emoji reaction; a REMOVED action clears it (empty body → no badge).
 		if (message.get("action") or "").upper() == "REMOVED":

@@ -416,6 +416,25 @@ class TestInfobipWebhookEndpoint(IntegrationTestCase):
         self.assertEqual(doc.content_type, "image")
         self.assertTrue(doc.attach)
 
+    def test_infobip_media_without_caption_has_no_text(self):
+        payload = self._message_payload({
+            "type": "IMAGE",
+            "url": "https://1e91zk.api.infobip.com/whatsapp/1/senders/5511955031024/media/nocaption",
+        })
+        payload["results"][0]["messageId"] = "infobip_webhook_media_nocaption_1"
+        media_response = MagicMock()
+        media_response.status_code = 200
+        media_response.content = b"image-bytes"
+        media_response.headers = {"Content-Type": "image/png"}
+
+        with self._set_payload(payload), patch("frappe_whatsapp.utils.webhook.requests.get", return_value=media_response):
+            infobip()
+
+        doc = frappe.get_doc("WhatsApp Message", {"message_id": "infobip_webhook_media_nocaption_1"})
+        self.assertEqual(doc.content_type, "image")
+        self.assertFalse(doc.message)
+        self.assertTrue(doc.attach)
+
     def test_infobip_blocks_media_download_to_untrusted_host(self):
         payload = self._message_payload({
             "type": "IMAGE",
